@@ -1,0 +1,159 @@
+-- Roblox Mobile Free Fly (บินอิสระขึ้นลงได้)
+-- ใส่ใน LocalScript
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local flying = false
+local speed = 100
+
+local bodyVelocity
+local bodyGyro
+
+local up = false
+local down = false
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "ProFlyMobile"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- ปุ่มเปิดบิน
+local flyBtn = Instance.new("TextButton")
+flyBtn.Size = UDim2.new(0,110,0,110)
+flyBtn.Position = UDim2.new(0,20,1,-170)
+flyBtn.BackgroundColor3 = Color3.fromRGB(0,170,255)
+flyBtn.Text = "FLY"
+flyBtn.TextScaled = true
+flyBtn.TextColor3 = Color3.new(1,1,1)
+flyBtn.Parent = gui
+
+local c1 = Instance.new("UICorner", flyBtn)
+c1.CornerRadius = UDim.new(1,0)
+
+-- ปุ่มขึ้น
+local upBtn = Instance.new("TextButton")
+upBtn.Size = UDim2.new(0,80,0,80)
+upBtn.Position = UDim2.new(1,-190,1,-260)
+upBtn.BackgroundColor3 = Color3.fromRGB(0,255,100)
+upBtn.Text = "UP"
+upBtn.TextScaled = true
+upBtn.TextColor3 = Color3.new(1,1,1)
+upBtn.Parent = gui
+
+local c2 = Instance.new("UICorner", upBtn)
+c2.CornerRadius = UDim.new(1,0)
+
+-- ปุ่มลง
+local downBtn = Instance.new("TextButton")
+downBtn.Size = UDim2.new(0,80,0,80)
+downBtn.Position = UDim2.new(1,-190,1,-160)
+downBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
+downBtn.Text = "DOWN"
+downBtn.TextScaled = true
+downBtn.TextColor3 = Color3.new(1,1,1)
+downBtn.Parent = gui
+
+local c3 = Instance.new("UICorner", downBtn)
+c3.CornerRadius = UDim.new(1,0)
+
+-- เริ่มบิน
+local function startFly()
+
+	flying = true
+
+	bodyVelocity = Instance.new("BodyVelocity")
+	bodyVelocity.MaxForce = Vector3.new(999999,999999,999999)
+	bodyVelocity.Velocity = Vector3.zero
+	bodyVelocity.Parent = hrp
+
+	bodyGyro = Instance.new("BodyGyro")
+	bodyGyro.MaxTorque = Vector3.new(999999,999999,999999)
+	bodyGyro.P = 10000
+	bodyGyro.CFrame = hrp.CFrame
+	bodyGyro.Parent = hrp
+
+	humanoid.PlatformStand = true
+
+	flyBtn.Text = "ON"
+end
+
+-- หยุดบิน
+local function stopFly()
+
+	flying = false
+
+	if bodyVelocity then
+		bodyVelocity:Destroy()
+	end
+
+	if bodyGyro then
+		bodyGyro:Destroy()
+	end
+
+	humanoid.PlatformStand = false
+
+	flyBtn.Text = "FLY"
+end
+
+-- ปุ่มเปิด/ปิดบิน
+flyBtn.MouseButton1Click:Connect(function()
+
+	if flying then
+		stopFly()
+	else
+		startFly()
+	end
+
+end)
+
+-- กดขึ้น
+upBtn.MouseButton1Down:Connect(function()
+	up = true
+end)
+
+upBtn.MouseButton1Up:Connect(function()
+	up = false
+end)
+
+-- กดลง
+downBtn.MouseButton1Down:Connect(function()
+	down = true
+end)
+
+downBtn.MouseButton1Up:Connect(function()
+	down = false
+end)
+
+-- ระบบบิน
+RunService.RenderStepped:Connect(function()
+
+	if flying and bodyVelocity and bodyGyro then
+
+		local camera = workspace.CurrentCamera
+		local moveDir = humanoid.MoveDirection
+
+		local velocity = moveDir * speed
+
+		-- บินขึ้น
+		if up then
+			velocity += Vector3.new(0, speed, 0)
+		end
+
+		-- บินลง
+		if down then
+			velocity -= Vector3.new(0, speed, 0)
+		end
+
+		bodyVelocity.Velocity = velocity
+		bodyGyro.CFrame = camera.CFrame
+
+	end
+end)
